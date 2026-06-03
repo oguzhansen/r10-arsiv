@@ -1,0 +1,24 @@
+{% extends "auth_base.html" %}
+{% block title %}İlk kurulum - R10 Konu Takip{% endblock %}
+{% block auth_subtitle %}İlk kez açılıyor — yönetici hesabı oluşturun{% endblock %}
+
+{% block auth_content %}
+<form method="post" action="{{ url_for('setup') }}">
+    <div class="mb-3">
+        <label class="form-label">Kullanıcı adı</label>
+        <input type="text" name="username" class="form-control" required autofocus autocomplete="username">
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Şifre</label>
+        <input type="password" name="password" class="form-control" required minlength="8" autocomplete="new-password">
+        <div class="form-text">En az 8 karakter</div>
+    </div>
+    <div class="mb-4">
+        <label class="form-label">Şifre (tekrar)</label>
+        <input type="password" name="password2" class="form-control" required minlength="8" autocomplete="new-password">
+    </div>
+    <button type="submit" class="btn btn-primary w-100 btn-lg">
+        <i class="bi bi-check-lg"></i> Kurulumu tamamla
+    </button>
+</form>
+{% endblock %}

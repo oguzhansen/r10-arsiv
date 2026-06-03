@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Ayarlar - R10 Konu Takip{% endblock %}
+
+{% block content %}
+<h3 class="mb-4 fw-bold"><i class="bi bi-gear text-primary"></i> Ayarlar</h3>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <form method="post">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="bi bi-telegram"></i> Telegram Bildirimleri
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Bot Token</label>
+                        <input type="password" name="telegram_bot_token" class="form-control"
+                               value="{{ settings.telegram_bot_token }}"
+                               placeholder="123456789:ABCdefGHI...">
+                        <div class="form-text">
+                            Telegram'da <strong>@BotFather</strong> → <code>/newbot</code> ile bot oluşturup token alın.
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Chat ID</label>
+                        <input type="text" name="telegram_chat_id" class="form-control"
+                               value="{{ settings.telegram_chat_id }}"
+                               placeholder="örnek: -5205733546 veya 123456789">
+                        <div class="form-text">
+                            Kişisel sohbet: pozitif ID (<strong>@userinfobot</strong>).
+                            Grup: negatif ID (<code>getUpdates</code> içinde <code>"type":"group"</code>).
+                            Bota veya gruba önce <strong>Start</strong> / ekleme yapın.
+                        </div>
+                    </div>
+                    <p class="small text-muted mb-0">
+                        Tarama sıklığı otomatik ayarlanır (paralel, yaklaşık 60 saniyede bir tur).
+                    </p>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="bi bi-check-lg"></i> Ayarları Kaydet
+            </button>
+        </form>
+
+        <form method="post" action="{{ url_for('test_telegram') }}" class="mt-3">
+            <button type="submit" class="btn btn-outline-info">
+                <i class="bi bi-send"></i> Test Mesajı Gönder
+            </button>
+            <span class="form-text ms-2">Önce ayarları kaydedin, sonra test edin.</span>
+        </form>
+    </div>
+</div>
+{% endblock %}

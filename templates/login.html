@@ -1,0 +1,20 @@
+{% extends "auth_base.html" %}
+{% block title %}Giriş - R10 Konu Takip{% endblock %}
+{% block auth_subtitle %}Panele giriş yapın{% endblock %}
+
+{% block auth_content %}
+<form method="post" action="{{ url_for('login') }}">
+    <input type="hidden" name="next" value="{{ next_url or '' }}">
+    <div class="mb-3">
+        <label class="form-label">Kullanıcı adı</label>
+        <input type="text" name="username" class="form-control" required autofocus autocomplete="username">
+    </div>
+    <div class="mb-4">
+        <label class="form-label">Şifre</label>
+        <input type="password" name="password" class="form-control" required autocomplete="current-password">
+    </div>
+    <button type="submit" class="btn btn-primary w-100 btn-lg">
+        <i class="bi bi-box-arrow-in-right"></i> Giriş yap
+    </button>
+</form>
+{% endblock %}

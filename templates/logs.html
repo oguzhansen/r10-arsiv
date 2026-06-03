@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block title %}Loglar - R10 Konu Takip{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+    <h3 class="mb-0 fw-bold"><i class="bi bi-journal-text text-primary"></i> Eşleşen Konular</h3>
+    {% if scanning %}
+    <form method="post" action="{{ url_for('scanner_run_now') }}" class="d-inline">
+        <button type="submit" class="btn btn-outline-primary">
+            <i class="bi bi-arrow-clockwise"></i> Şimdi Tara
+        </button>
+    </form>
+    {% endif %}
+</div>
+
+<div class="row g-2 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="stat-card text-center py-3 px-2">
+            <small class="text-muted d-block">Anahtar kelime</small>
+            <strong class="fs-5">{{ stats.keywords }}</strong>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card text-center py-3 px-2">
+            <small class="text-muted d-block">Aktif kategori</small>
+            <strong class="fs-5">{{ stats.active_categories }}</strong>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card text-center py-3 px-2">
+            <small class="text-muted d-block">Görülen konu</small>
+            <strong class="fs-5">{{ stats.seen_topics }}</strong>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card text-center py-3 px-2">
+            <small class="text-muted d-block">Eşleşen konu</small>
+            <strong class="fs-5">{{ stats.matched_topics }}</strong>
+        </div>
+    </div>
+</div>
+
+{% if entries %}
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0 align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>Tarih (TR)</th>
+                    <th>Konu Başlığı</th>
+                    <th>Kategori</th>
+                    <th>Telegram</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for e in entries %}
+                <tr>
+                    <td class="text-nowrap">
+                        <small class="text-muted">{{ e.date.strftime('%d.%m.%Y %H:%M') }}</small>
+                    </td>
+                    <td>
+                        <a href="{{ e.url }}" target="_blank" rel="noopener">
+                            {{ e.title }}
+                            <i class="bi bi-box-arrow-up-right" style="font-size:.75rem"></i>
+                        </a>
+                    </td>
+                    <td><span class="badge badge-category">{{ e.category }}</span></td>
+                    <td class="text-nowrap">
+                        {% if e.telegram_sent %}
+                        <span class="badge bg-success">Gönderildi</span>
+                        {% else %}
+                        <span class="badge bg-danger" title="{{ e.telegram_error or '' }}">Gitmedi</span>
+                        <form method="post" action="{{ url_for('resend_telegram', match_id=e.id) }}" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-outline-warning mt-1">Tekrar gönder</button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if pagination.pages > 1 %}
+<nav class="mt-4 d-flex justify-content-center">
+    <ul class="pagination">
+        {% if pagination.has_prev %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('logs', page=pagination.prev_num) }}">&laquo;</a>
+        </li>
+        {% endif %}
+        {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if p %}
+                <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('logs', page=p) }}">{{ p }}</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+            {% endif %}
+        {% endfor %}
+        {% if pagination.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('logs', page=pagination.next_num) }}">&raquo;</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+{% else %}
+<div class="card text-center text-muted py-5 px-3">
+    <i class="bi bi-inbox" style="font-size:3rem"></i>
+    <p class="mt-3 mb-2"><strong>Henüz eşleşen konu yok.</strong></p>
+    <p class="small mb-0">
+        Bu sayfa <b>eşleşen konuları</b> listeler (her konu tek satır).<br>
+        Baseline sırasında kaydedilen konular burada görünmez.
+    </p>
+    <ul class="list-unstyled small mt-3 text-start d-inline-block">
+        {% if not scanning %}
+        <li class="text-warning">Tarama kapalı — <a href="{{ url_for('index') }}">Dashboard</a> üzerinden başlatın.</li>
+        {% elif stats.keywords == 0 %}
+        <li class="text-warning">Anahtar kelime yok — Dashboard'dan kelime ekleyin.</li>
+        {% elif stats.active_categories == 0 %}
+        <li class="text-warning">Aktif kategori yok — Dashboard'dan kategori seçin.</li>
+        {% elif stats.seen_topics > 0 %}
+        <li class="text-success">{{ stats.seen_topics }} konu izleniyor; yeni eşleşme gelince burada ve Telegram'da görünür.</li>
+        {% else %}
+        <li>Baseline veya ilk tarama bitene kadar bekleyin.</li>
+        {% endif %}
+    </ul>
+    {% if scanning and stats.keywords > 0 and stats.active_categories > 0 %}
+    <form method="post" action="{{ url_for('scanner_run_now') }}" class="mt-3">
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-arrow-clockwise"></i> Şimdi Tara
+        </button>
+    </form>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

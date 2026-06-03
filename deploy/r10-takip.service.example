@@ -1,0 +1,15 @@
+[Unit]
+Description=R10 Konu Takip
+After=network.target
+
+[Service]
+User=root
+WorkingDirectory=/opt/r10-arsiv
+Environment="PATH=/opt/r10-arsiv/venv/bin"
+EnvironmentFile=-/opt/r10-arsiv/.env
+ExecStart=/opt/r10-arsiv/venv/bin/gunicorn -w 1 -b 0.0.0.0:5000 app:app
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

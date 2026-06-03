@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - R10 Konu Takip{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <h3 class="mb-0 fw-bold"><i class="bi bi-speedometer2 text-primary"></i> Dashboard</h3>
+    <div class="d-flex gap-2">
+        {% if scanning %}
+        <form method="post" action="{{ url_for('scanner_stop') }}" class="d-inline">
+            <button class="btn btn-outline-danger">
+                <i class="bi bi-stop-circle"></i> Taramayı Durdur
+            </button>
+        </form>
+        <form method="post" action="{{ url_for('scanner_run_now') }}" class="d-inline">
+            <button class="btn btn-outline-primary">
+                <i class="bi bi-arrow-clockwise"></i> Şimdi Tara
+            </button>
+        </form>
+        {% else %}
+        <form method="post" action="{{ url_for('scanner_start') }}" class="d-inline">
+            <button class="btn btn-success">
+                <i class="bi bi-play-circle"></i> Taramayı Başlat
+            </button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+{% if scanning %}
+<div class="alert alert-success d-flex align-items-center mb-4">
+    <div class="spinner-grow spinner-grow-sm text-success me-2" role="status"></div>
+    <span>
+        Tarama aktif: seçili kategorilerin 1. sayfası paralel taranıyor (yaklaşık her {{ scan_interval_seconds }} sn).
+        Yeni eşleşmelerde Telegram anında gider; aynı konu birden fazla kelimeye uyarsa tek satırda birleştirilir.
+    </span>
+</div>
+{% else %}
+<div class="alert alert-secondary mb-4">
+    <i class="bi bi-info-circle"></i> Tarama durdurulmuş. Başlat dediğinizde önce mevcut konular sessizce kaydedilir, sonra yeni konular takip edilir.
+</div>
+{% endif %}
+
+<div class="row">
+    <div class="col-lg-7 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <span><i class="bi bi-folder2-open"></i> Kategoriler</span>
+                <form method="post" action="{{ url_for('refresh_categories') }}" class="d-inline mb-0">
+                    <button class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-arrow-repeat"></i> R10'dan Güncelle
+                    </button>
+                </form>
+            </div>
+            <div class="card-body" style="max-height:550px;overflow-y:auto">
+                {% if grouped_categories %}
+                    {% for parent, cats in grouped_categories.items() %}
+                    <div class="mb-3 category-group" data-parent="{{ parent }}">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-1 border-bottom pb-1 mb-2">
+                            <h6 class="text-muted fw-bold mb-0">{{ parent }}</h6>
+                            <div class="btn-group btn-group-sm">
+                                <button type="button" class="btn btn-outline-primary btn-select-all-group" data-parent="{{ parent }}">
+                                    Tümünü seç
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-deselect-all-group" data-parent="{{ parent }}">
+                                    Tümünü kaldır
+                                </button>
+                            </div>
+                        </div>
+                        {% for cat in cats %}
+                        <div class="form-check ms-2 mb-1">
+                            <input class="form-check-input category-toggle" type="checkbox"
+                                   id="cat-{{ cat.id }}" data-cat-id="{{ cat.id }}"
+                                   {% if cat.is_active %}checked{% endif %}>
+                            <label class="form-check-label" for="cat-{{ cat.id }}">
+                                {{ cat.name }}
+                                <small class="text-muted">(f-{{ cat.r10_forum_id }})</small>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-inbox" style="font-size:2rem"></i>
+                        <p class="mt-2 mb-0">Henüz kategori yüklenmedi.<br>
+                        <b>R10'dan Güncelle</b> ile kategorileri çekin.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <span><i class="bi bi-key"></i> Anahtar Kelimeler</span>
+                {% if keywords %}
+                <form method="post" action="{{ url_for('delete_all_keywords') }}" class="d-inline mb-0"
+                      onsubmit="return confirm('Tüm anahtar kelimeler ve eşleşme logları silinecek. Emin misiniz?');">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-trash"></i> Tümünü sil
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <form method="post" action="{{ url_for('add_keyword') }}" class="mb-3">
+                    <div class="input-group">
+                        <input type="text" name="keyword" class="form-control"
+                               placeholder="instagram, tiktok, hesap al ..." required>
+                        <button class="btn btn-primary" type="submit">
+                            <i class="bi bi-plus-lg"></i> Ekle
+                        </button>
+                    </div>
+                    <div class="form-text">Birden fazla kelimeyi virgül veya noktalı virgül ile ayırın.</div>
+                </form>
+
+                {% if keywords %}
+                <ul class="list-group list-group-flush">
+                    {% for kw in keywords %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span><i class="bi bi-tag text-primary"></i> {{ kw.keyword }}</span>
+                        <form method="post" action="{{ url_for('delete_keyword', kw_id=kw.id) }}" class="d-inline mb-0">
+                            <button class="btn btn-sm btn-outline-danger" title="Sil"
+                                onclick="return confirm('Bu anahtar kelimeyi silmek istediğinize emin misiniz?')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <div class="text-center text-muted py-3">
+                    <i class="bi bi-search" style="font-size:1.5rem"></i>
+                    <p class="mt-2 mb-0">Henüz anahtar kelime eklenmedi.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelectorAll('.category-toggle').forEach(cb => {
+    cb.addEventListener('change', function() {
+        const catId = this.dataset.catId;
+        fetch(`/toggle-category/${catId}`, {method: 'POST'})
+            .then(r => r.json())
+            .then(data => { this.checked = data.is_active; })
+            .catch(() => { this.checked = !this.checked; });
+    });
+});
+
+function setGroupCheckboxes(parentName, active) {
+    const group = document.querySelector(`.category-group[data-parent="${CSS.escape(parentName)}"]`);
+    if (!group) return;
+    group.querySelectorAll('.category-toggle').forEach(cb => { cb.checked = active; });
+}
+
+function toggleCategoryGroup(parentName, active) {
+    return fetch('/toggle-category-group', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({parent_name: parentName, active: active}),
+    })
+        .then(r => r.json())
+        .then(data => {
+            if (data.error) throw new Error(data.error);
+            setGroupCheckboxes(parentName, active);
+        });
+}
+
+document.querySelectorAll('.btn-select-all-group').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const parent = this.dataset.parent;
+        this.disabled = true;
+        toggleCategoryGroup(parent, true)
+            .catch(() => alert('Kategori grubu güncellenemedi.'))
+            .finally(() => { this.disabled = false; });
+    });
+});
+
+document.querySelectorAll('.btn-deselect-all-group').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const parent = this.dataset.parent;
+        this.disabled = true;
+        toggleCategoryGroup(parent, false)
+            .catch(() => alert('Kategori grubu güncellenemedi.'))
+            .finally(() => { this.disabled = false; });
+    });
+});
+</script>
+{% endblock %}
