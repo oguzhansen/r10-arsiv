@@ -12,6 +12,17 @@ R10.net arşivinde seçtiğiniz kategorileri ve anahtar kelimeleri izleyen, yeni
 - Virgülle toplu anahtar kelime ekleme
 - İlk kurulumda yönetici hesabı, sonrasında giriş koruması
 
+## Ekran görüntüleri
+
+### Dashboard
+![Dashboard](docs/screenshots/dashboard.png)
+
+### Loglar
+![Eşleşen konular](docs/screenshots/logs.png)
+
+### Telegram
+![Eşleşen konular](docs/screenshots/telegram.png)
+
 ## Gereksinimler
 
 - Python 3.10+
